@@ -59,6 +59,7 @@ Entender qué es un bucket de S3 y operar con él desde la línea de comandos: c
 4. Sube un archivo con `aws s3 cp`.
 5. Lista el contenido del bucket.
 6. Descarga el objeto y muestra su contenido.
+7. Con `-Limpiar`, elimina el objeto, el bucket y los archivos locales (ver [Limpieza](#limpieza)).
 
 ## Flujo
 
@@ -110,6 +111,54 @@ OPCIONAL (-Limpiar)
   aws s3 rm --recursive ──► aws s3 rb ──► Remove-Item
 ```
 
+## Limpieza
+
+Al terminar la práctica conviene borrar lo que se creó para dejar floci limpio y poder repetirla desde cero.
+
+### Opción 1: con el script
+
+Agrega el parámetro `-Limpiar`. El script hace los 5 pasos y al final elimina todo:
+
+```powershell
+.\crear-bucket.ps1 -Limpiar
+```
+
+Si usaste otro nombre de bucket, indícalo también:
+
+```powershell
+.\crear-bucket.ps1 -Bucket demo-bucket -Limpiar
+```
+
+Qué elimina:
+
+| Recurso | Comando que ejecuta |
+|---|---|
+| Objetos del bucket | `aws s3 rm s3://mi-primer-bucket --recursive` |
+| El bucket | `aws s3 rb s3://mi-primer-bucket` |
+| Archivos locales de prueba | `Remove-Item` sobre `prueba.txt` y `descargado.txt` en `$env:TEMP` |
+
+> Un bucket debe estar **vacío** antes de borrarse, por eso primero se eliminan los objetos (`rm`) y después el bucket (`rb`).
+
+### Opción 2: manualmente
+
+Si ya ejecutaste el script sin `-Limpiar`, puedes borrar los recursos a mano:
+
+```powershell
+aws s3 rm s3://mi-primer-bucket --recursive
+aws s3 rb s3://mi-primer-bucket
+Remove-Item "$env:TEMP\prueba.txt", "$env:TEMP\descargado.txt"
+```
+
+Si abriste una ventana nueva de PowerShell, configura primero las variables de entorno (ver Paso 0 del flujo).
+
+### Verificar que quedó limpio
+
+```powershell
+aws s3 ls
+```
+
+No debe aparecer `mi-primer-bucket`.
+
 ## Problemas frecuentes
 
 **`InvalidAccessKeyId ... does not exist in our records`**
@@ -124,7 +173,3 @@ Comprueba con `docker ps` que el contenedor de floci está corriendo y publicand
 ## Seguridad
 
 Las credenciales `test` / `test` son valores falsos que solo sirven para floci. Nunca subas credenciales reales de AWS al repositorio.
-
-## Siguiente práctica
-
-IAM: crear un usuario y una política de solo lectura sobre un bucket.
